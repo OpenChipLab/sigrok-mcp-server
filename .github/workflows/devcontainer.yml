@@ -1,0 +1,41 @@
+name: Devcontainer
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".devcontainer/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".devcontainer/**"
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create env file from template
+        run: cp .devcontainer/.env.example .devcontainer/.env
+
+      - name: Build devcontainer
+        uses: devcontainers/ci@v0.3
+        with:
+          runCmd: |
+            sigrok-cli --version
+            yamllint --version
+            golangci-lint version
+            gh --version
+            node --version
+            markdownlint-cli2 --version
