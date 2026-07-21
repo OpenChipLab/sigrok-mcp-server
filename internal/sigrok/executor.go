@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"os/exec"
+	"runtime"
+	"strings"
 	"time"
 )
 
@@ -37,6 +39,15 @@ func NewExecutor(cliPath string, timeout time.Duration, workingDir string) *Exec
 }
 
 func defaultCommandFactory(ctx context.Context, name string, args ...string) *exec.Cmd {
+	// On Windows, .bat/.cmd files need to be executed via cmd.exe
+	if runtime.GOOS == "windows" {
+		lowerName := strings.ToLower(name)
+		if strings.HasSuffix(lowerName, ".bat") || strings.HasSuffix(lowerName, ".cmd") {
+			// Prepend cmd.exe /c and the batch file as the first argument
+			allArgs := append([]string{"/c", name}, args...)
+			return exec.CommandContext(ctx, "cmd.exe", allArgs...)
+		}
+	}
 	return exec.CommandContext(ctx, name, args...)
 }
 
